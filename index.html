@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- 1. Título alterado -->
+    <title>Experiência AR Inunda</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+      /* Estilos básicos e para o logo */
+      body {
+        margin: 0;
+        overflow: hidden;
+      }
+      .logo-container {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 10001;
+      }
+      .logo-container img {
+        height: 40px;
+        width: auto;
+        display: block;
+        opacity: 0.8;
+      }
+
+      /* Cor do scanner padrão do MindAR */
+      .mindar-ui-scanning .scanning-frame {
+        border-color: #ff0000;
+      }
+
+      /* 2. CSS PARA A TELA DE LOADING */
+      #loader-ui {
+        position: fixed; /* Ocupa a tela inteira, por cima de tudo */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000; /* Fica acima da cena AR, mas abaixo do logo */
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.8
+        ); /* Fundo preto semi-transparente */
+        color: white;
+        font-family: sans-serif;
+        font-size: 20px;
+        /* Centraliza o texto "Carregando..." */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- 3. Link do logo atualizado -->
+    <a
+      href="https://inundacapital.bandcamp.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="logo-container"
+    >
+      <img src="./orbee360.png" alt="Logo Orbee 360" />
+    </a>
+
+    <!-- 4. Elemento HTML para a tela de loading -->
+    <div id="loader-ui">Carregando...</div>
+
+    <!-- Cena MindAR -->
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind;"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+    >
+      <a-assets>
+        <!-- Pré-carrega o vídeo `inunda.mp4` -->
+        <video
+          id="inunda-video"
+          src="./inunda.mp4"
+          loop="true"
+          muted="true"
+          playsinline
+        ></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- Adicionamos um componente 'video-controller' para tocar/pausar o vídeo -->
+      <a-entity mindar-image-target="targetIndex: 0" video-controller>
+        <!-- O plano que servirá como tela para o vídeo -->
+        <a-plane
+          src="#inunda-video"
+          position="0 0 0"
+          height="0.5625"
+          width="1"
+          rotation="0 0 0"
+        ></a-plane>
+      </a-entity>
+    </a-scene>
+
+    <!-- 5. JAVASCRIPT para controlar o loading e o vídeo -->
+    <script>
+      // Garante que o DOM está carregado antes de rodar o script
+      document.addEventListener('DOMContentLoaded', () => {
+        const sceneEl = document.querySelector('a-scene');
+        const loaderUI = document.querySelector('#loader-ui');
+
+        // LÓGICA DO LOADING:
+        // Escuta o evento 'arReady'. Ele é disparado quando a câmera está pronta para escanear.
+        sceneEl.addEventListener('arReady', (event) => {
+          // Esconde a tela de "Carregando..."
+          loaderUI.style.display = 'none';
+        });
+
+        // LÓGICA DO VÍDEO:
+        // Registra um novo componente A-Frame para controlar o play/pause do vídeo
+        AFRAME.registerComponent('video-controller', {
+          init: function () {
+            this.video = document.querySelector('#inunda-video');
+            this.targetEntity = this.el;
+
+            this.video.pause(); // Pausa o vídeo por padrão
+
+            // Toca o vídeo quando o alvo for encontrado
+            this.targetEntity.addEventListener('targetFound', () => {
+              this.video.play();
+            });
+
+            // Pausa o vídeo quando o alvo for perdido
+            this.targetEntity.addEventListener('targetLost', () => {
+              this.video.pause();
+            });
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
